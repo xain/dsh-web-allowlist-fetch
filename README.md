@@ -17,6 +17,9 @@ This plugin registers a `web_fetch` provider (`id: allowlist`) that:
 - keeps the **stock public-IP safety check** for every other host, so the
   default posture is unchanged.
 
+The allowlist is editable from the web client's **Settings → 插件配置** surface;
+see [Configuration](#configuration).
+
 ## Install
 
 Publish this package (or install from your git URL), then in your Harness home:
@@ -35,23 +38,35 @@ The bundle's `cordis.patch.yml` registers the provider and routes
 
 ## Configuration
 
-The allowlist lives in the inserted row's `config.allowlist` (edit it in your
-profile, e.g. via `cordis.patch.yml` or the settings layer):
+The allowlist is exposed as a **settings namespace** (`dsh-web-allowlist-fetch`)
+and edited from the **Settings → 插件配置** surface in the web client: open the
+plugin's card and edit the allowlist (one host/IP entry per line). A committed
+override lands in `$DSH_HOME/settings.yaml` and applies on the next fetch
+without restarting.
+
+The composed default (what the card starts from) is the bundle's patch — edit
+it in your profile's `cordis.patch.yml` (or the settings layer):
 
 ```yaml
 - insert:
     - id: web-fetch-allowlist
       name: dsh-web-allowlist-fetch
       config:
-        allowlist:
-          - weather.com            # this domain + any subdomain
-          - www.weather.com.cn
-          - 198.18.0.0/15          # Clash fake-IP range (any host resolving here)
-          - 127.0.0.1              # a single IP literal
+        allowlist: []
 - id: web
   config:
     fetchProvider: allowlist
     searchProvider: ddg
+```
+
+You can also set the namespace directly in your settings layer:
+
+```yaml
+dsh-web-allowlist-fetch:
+  allowlist:
+    - weather.com            # this domain + any subdomain
+    - 198.18.0.0/15          # Clash fake-IP range (any host resolving here)
+    - 127.0.0.1              # a single IP literal
 ```
 
 ### Entry forms

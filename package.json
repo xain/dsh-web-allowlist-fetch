@@ -1,7 +1,7 @@
 {
   "name": "dsh-web-allowlist-fetch",
   "description": "IP/domain allowlist web_fetch provider for DeepSeek Harness: lets web_fetch reach allowlisted hosts/IPs freely (incl. proxy fake-IP addresses like 198.18.x.x) while keeping the default public-IP safety check for everything else.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "keywords": [
     "deepseek-harness",
     "dsh",
@@ -14,11 +14,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mcxianyujun/dsh-web-allowlist-fetch.git"
+    "url": "git+https://github.com/xain/dsh-web-allowlist-fetch.git"
   },
-  "homepage": "https://github.com/mcxianyujun/dsh-web-allowlist-fetch#readme",
+  "homepage": "https://github.com/xain/dsh-web-allowlist-fetch#readme",
   "bugs": {
-    "url": "https://github.com/mcxianyujun/dsh-web-allowlist-fetch/issues"
+    "url": "https://github.com/xain/dsh-web-allowlist-fetch/issues"
   },
   "type": "module",
   "main": "lib/index.mjs",
@@ -52,11 +52,13 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": ">=4.0.1 <5",
+    "@deepseek-ai/dsh-settings": ">=0.0.1-rc.1 <1",
     "@deepseek-ai/dsh-web": ">=0.1.0-rc.6 <1",
     "@deepseek-ai/schemastery": ">=3.18.1 <4"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": ">=4.0.1 <5",
+    "@deepseek-ai/dsh-settings": ">=0.0.1-rc.1 <1",
     "@deepseek-ai/dsh-web": ">=0.1.0-rc.6 <1",
     "@deepseek-ai/schemastery": ">=3.18.1 <4",
     "tsdown": "^0.22.14"

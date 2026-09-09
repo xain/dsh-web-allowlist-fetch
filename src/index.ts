@@ -16,8 +16,10 @@
  * - Every other host is validated with the same non-public-IP rejection the
  *   stock provider applies, so the default posture is unchanged.
  *
- * Provider id: `allowlist`. The allowlist is configured through this bundle's
- * `cordis.patch.yml` (the inserted row's `config.allowlist`).
+ * Provider id: `allowlist`. The allowlist is forwarded from this bundle's
+ * settings namespace (`dsh-web-allowlist-fetch`), which the host exposes to
+ * the Settings → 插件配置 surface. The composed base comes from this bundle's
+ * `cordis.patch.yml`, and a user override lands in `$DSH_HOME/settings.yaml`.
  */
 import z from '@deepseek-ai/schemastery';
 import type { Context } from '@deepseek-ai/cordis';
@@ -35,6 +37,12 @@ export const ALLOWLIST_FETCH_PROVIDER_ID = 'allowlist';
 const USER_AGENT = 'deepseek-harness-web-allowlist-fetch/0.1.0';
 /** Cap on decoded body characters returned for allowlisted hosts. */
 const DEFAULT_MAX_BODY_CHARS = 200_000;
+/**
+ * Settings namespace this bundle owns. Lowercase hyphenated identifier; the
+ * host exposes it to the Settings → 插件配置 surface and stores user overrides
+ * in `$DSH_HOME/settings.yaml` under this key.
+ */
+export const DSH_WEB_ALLOWLIST_FETCH_SETTINGS_NAMESPACE = 'dsh-web-allowlist-fetch';
 //#endregion
 
 /** Plugin config: the explicit allowlist plus bounds. */
@@ -239,18 +247,20 @@ export function compileEntry(entry: string): HostMatcher {
 /**
  * Build the allowlist fetch provider.
  *
- * @param matchers - compiled allowlist host/IP matchers.
- * @param maxBodyChars - decoded body char cap for allowlisted hosts.
+ * @param getResolved - thunk returning the currently authoritative config; the
+ *   provider recompiles matchers on every fetch so a committed settings change
+ *   applies without re-registering.
  */
 export function createAllowlistFetchProvider(
-  matchers: readonly HostMatcher[],
-  maxBodyChars: number,
+  getResolved: () => ResolvedConfig,
 ): WebFetchProvider {
   return {
     id: ALLOWLIST_FETCH_PROVIDER_ID,
     available: () => true,
     fetch(request: WebFetchRequest, signal?: AbortSignal): Promise<WebFetchResult> {
-      return fetchAllowlisted(request.url, matchers, maxBodyChars, signal);
+      const resolved = getResolved();
+      const matchers = resolved.allowlist.map(compileEntry);
+      return fetchAllowlisted(request.url, matchers, resolved.maxBodyChars, signal);
     },
   };
 }
@@ -374,19 +384,44 @@ async function directFetch(
 
 /** Cordis plugin metadata. */
 export const name = 'dsh-web-allowlist-fetch';
-/** Services required by this plugin. */
+/** Cordis service requirements: `web` (fetch seam) is mandatory; `settings` is optional. */
 export const inject = ['web'] as const;
 
 /**
- * Cordis plugin entry: register the allowlist fetch provider. Routing
- * `web.config.fetchProvider` to `allowlist` is handled by this bundle's
- * `cordis.patch.yml`.
+ * Cordis plugin entry: register the allowlist fetch provider and expose the
+ * allowlist as a settings namespace.
  *
- * @param ctx - the Cordis context, providing `ctx.web`.
+ * The provider reads its config through a dynamic thunk (`current`), so when
+ * the `settings` service is present the user can edit the allowlist from the
+ * Settings → 插件配置 surface and the change applies on the next fetch without
+ * re-registration. When no settings service exists the plugin falls back to its
+ * composed entry config (from `cordis.patch.yml`) and keeps the stock behavior.
+ *
+ * Routing `web.config.fetchProvider` to `allowlist` is handled by this
+ * bundle's `cordis.patch.yml`.
+ *
+ * @param ctx - the Cordis context, providing `ctx.web` (and optionally `ctx.settings`).
  * @param config - validated plugin config.
  */
 export function apply(ctx: Context, config: Config): void {
-  const resolved = config as ResolvedConfig;
-  const matchers = resolved.allowlist.map(compileEntry);
-  ctx.web.registerFetchProvider(createAllowlistFetchProvider(matchers, resolved.maxBodyChars));
+  let current: () => Config = () => config;
+  const resolved = () => (current() as ResolvedConfig) ?? (config as ResolvedConfig);
+
+  ctx.web.registerFetchProvider(createAllowlistFetchProvider(resolved));
+
+  ctx.inject(['settings'], (settingsCtx) => {
+    settingsCtx.settings.installSection(
+      ctx,
+      DSH_WEB_ALLOWLIST_FETCH_SETTINGS_NAMESPACE,
+      Config,
+      config,
+      {
+        // While the settings provider is attached, the settings scope is the
+        // authoritative source (user layer over the composed entry). On detach
+        // the source falls back to the entry config, and onChange is fired.
+        setSource: (source) => { current = source; },
+        onChange: () => {},
+      },
+    );
+  });
 }

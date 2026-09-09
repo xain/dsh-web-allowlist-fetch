@@ -3,6 +3,7 @@ import { defineConfig } from 'tsdown'
 /** Peer APIs resolved from the Harness profile tree at runtime. */
 const HOST_EXTERNALS = [
   '@deepseek-ai/cordis',
+  '@deepseek-ai/dsh-settings',
   '@deepseek-ai/dsh-web',
   '@deepseek-ai/schemastery',
 ] as const
