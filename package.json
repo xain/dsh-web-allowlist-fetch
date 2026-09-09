@@ -57,10 +57,20 @@
     "@deepseek-ai/schemastery": ">=3.18.1 <4"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": ">=4.0.1 <5",
+    "@deepseek-ai/cordis": "^4.0.2",
+    "@deepseek-ai/dsh-client-locale": "^0.1.3-alpha.2",
+    "@deepseek-ai/dsh-client-runtime": "^0.1.0-rc.3",
+    "@deepseek-ai/dsh-client-store": "^0.1.3-alpha.2",
+    "@deepseek-ai/dsh-client-ui-settings": "^0.1.3-alpha.2",
+    "@deepseek-ai/dsh-client-ui-slots": "^0.1.3-alpha.2",
     "@deepseek-ai/dsh-settings": ">=0.0.1-rc.1 <1",
     "@deepseek-ai/dsh-web": ">=0.1.0-rc.6 <1",
     "@deepseek-ai/schemastery": ">=3.18.1 <4",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "response": "^0.18.0",
     "tsdown": "^0.22.14"
   }
 }
