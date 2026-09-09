@@ -115,6 +115,14 @@ export function arrayLinesField(field: string): CardFieldSpec {
   }
 }
 
+/** Compare two stored values by content (arrays deep-equal, primitives by ===). */
+function sameValue(a: unknown, b: unknown): boolean {
+  if (Array.isArray(a) && Array.isArray(b)) {
+    return a.length === b.length && a.every((v, i) => v === b[i])
+  }
+  return a === b
+}
+
 /**
  * Stages one card's edits over one settings namespace and writes them on save.
  *
@@ -277,7 +285,11 @@ export class CardForm<T> {
 
   private async store(field: string, value: unknown): Promise<boolean> {
     await this.scope.set(field, value)
-    return this.userLayer()?.[field] === value
+    // Read back the user layer and compare by *content*, not reference: the
+    // scope materializes a fresh object per snapshot, so `===` would always be
+    // false for array/object fields (e.g. the string[] allowlist), wrongly
+    // reporting every save as failed.
+    return sameValue(this.userLayer()?.[field], value)
   }
 
   private stage(field: string, edit: StagedEdit): void {
