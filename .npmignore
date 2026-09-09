@@ -1,0 +1,3 @@
+node_modules/
+tests/
+tsdown.config.ts

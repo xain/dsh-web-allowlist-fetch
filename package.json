@@ -1,0 +1,64 @@
+{
+  "name": "dsh-web-allowlist-fetch",
+  "description": "IP/domain allowlist web_fetch provider for DeepSeek Harness: lets web_fetch reach allowlisted hosts/IPs freely (incl. proxy fake-IP addresses like 198.18.x.x) while keeping the default public-IP safety check for everything else.",
+  "version": "0.1.0",
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "web-fetch",
+    "allowlist",
+    "ssrf",
+    "fake-ip",
+    "fetch-provider"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mcxianyujun/dsh-web-allowlist-fetch.git"
+  },
+  "homepage": "https://github.com/mcxianyujun/dsh-web-allowlist-fetch#readme",
+  "bugs": {
+    "url": "https://github.com/mcxianyujun/dsh-web-allowlist-fetch/issues"
+  },
+  "type": "module",
+  "main": "lib/index.mjs",
+  "exports": {
+    ".": {
+      "default": "./lib/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.mjs",
+    "cordis.patch.yml",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "prepare": "tsdown",
+    "test": "node --test tests/*.test.mjs",
+    "check": "tsdown && node --test tests/*.test.mjs"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": ">=4.0.1 <5",
+    "@deepseek-ai/dsh-web": ">=0.1.0-rc.6 <1",
+    "@deepseek-ai/schemastery": ">=3.18.1 <4"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": ">=4.0.1 <5",
+    "@deepseek-ai/dsh-web": ">=0.1.0-rc.6 <1",
+    "@deepseek-ai/schemastery": ">=3.18.1 <4",
+    "tsdown": "^0.22.14"
+  }
+}

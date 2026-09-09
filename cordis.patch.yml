@@ -1,0 +1,26 @@
+# dsh-web-allowlist-fetch bundle patch
+#
+# Registers the allowlist fetch provider and routes web_fetch through it.
+# Install with:  dsh plugin --profile web add dsh-web-allowlist-fetch
+#
+# The provider id is `allowlist`. Routing web_fetch through it is done by
+# patching `web.config.fetchProvider` to that id (otherwise the base bundle's
+# `http` provider and this one both register as usable and the seam raises
+# WEB_PROVIDER_AMBIGUOUS).
+#
+# NOTE on patch semantics: a patch row targets by id and REPLACES the whole
+# config of that row (see docs/architecture.md). So the `web` row below must
+# carry the full config you want, including `searchProvider` — otherwise the
+# value another layer set would be wiped. Adjust `searchProvider` to match your
+# search setup (this sample uses the `free-search` bundle's `ddg` provider).
+- insert:
+    - id: web-fetch-allowlist
+      name: dsh-web-allowlist-fetch
+      config:
+        allowlist:
+          - weather.com
+          - www.weather.com.cn
+- id: web
+  config:
+    fetchProvider: allowlist
+    searchProvider: ddg
