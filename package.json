@@ -1,7 +1,7 @@
 {
   "name": "dsh-web-allowlist-fetch",
   "description": "IP/domain allowlist web_fetch provider for DeepSeek Harness: lets web_fetch reach allowlisted hosts/IPs freely (incl. proxy fake-IP addresses like 198.18.x.x) while keeping the default public-IP safety check for everything else.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "keywords": [
     "deepseek-harness",
     "dsh",
