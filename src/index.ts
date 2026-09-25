@@ -16,13 +16,14 @@
  * - Every other host is validated with the same non-public-IP rejection the
  *   stock provider applies, so the default posture is unchanged.
  *
- * Provider id: `allowlist`. The allowlist is forwarded from this bundle's
- * settings namespace (`dsh-web-allowlist-fetch`), which the host exposes to
- * the Settings → 插件配置 surface. The composed base comes from this bundle's
- * `cordis.patch.yml`, and a user override lands in `$DSH_HOME/settings.yaml`.
+ * Provider id: `allowlist`. The allowlist is a `.volatile()` Config field, so
+ * the Loader exposes it on the Settings → 插件配置 surface (auto-generated from
+ * this plugin's Config schema) and hands `apply` live references; a committed
+ * profile edit applies to the next fetch without remounting. The composed base
+ * comes from this bundle's `cordis.patch.yml`.
  */
 import z from '@deepseek-ai/schemastery';
-import type { Context } from '@deepseek-ai/cordis';
+import type { Context, Volatile } from '@deepseek-ai/cordis';
 import type {
   WebFetchBody,
   WebFetchProvider,
@@ -37,32 +38,53 @@ export const ALLOWLIST_FETCH_PROVIDER_ID = 'allowlist';
 const USER_AGENT = 'deepseek-harness-web-allowlist-fetch/0.1.0';
 /** Cap on decoded body characters returned for allowlisted hosts. */
 const DEFAULT_MAX_BODY_CHARS = 200_000;
-/**
- * Settings namespace this bundle owns. Lowercase hyphenated identifier; the
- * host exposes it to the Settings → 插件配置 surface and stores user overrides
- * in `$DSH_HOME/settings.yaml` under this key.
- */
-export const DSH_WEB_ALLOWLIST_FETCH_SETTINGS_NAMESPACE = 'dsh-web-allowlist-fetch';
 //#endregion
 
-/** Plugin config: the explicit allowlist plus bounds. */
+/**
+ * Plugin config: the explicit allowlist plus bounds.
+ *
+ * Both fields are `.volatile()`: the Loader hands `apply` live references and
+ * commits profile edits in place, so a saved change applies without remounting.
+ * `resolveConfig` unwraps those references on every read.
+ */
 export interface Config {
   /**
    * Host/IP/CIDR entries that may be fetched without the public-IP guard.
    * Supports bare domains (also match subdomains), `.example.com`, `*.example.com`,
    * IP literals, and CIDR networks such as `198.18.0.0/15`.
    */
-  allowlist?: string[];
+  allowlist: Volatile<string[]>;
   /** Max decoded characters returned for an allowlisted host. */
-  maxBodyChars?: number;
+  maxBodyChars: Volatile<number>;
 }
 
-export const Config: z<Config> = z.object({
-  allowlist: z.array(z.string()).default([]),
-  maxBodyChars: z.number().default(DEFAULT_MAX_BODY_CHARS),
+export const Config = z.object({
+  allowlist: z.array(z.string())
+    .description('放行列表：每行一个主机或 IP。支持裸域名（同时匹配其子域）、通配符如 *.example.com、IP 字面量、或 CIDR 网段如 198.18.0.0/15。仅这些域名/IP 绕过公共 IP 安全检查。')
+    .default([])
+    .volatile(),
+  maxBodyChars: z.number()
+    .description('放行主机返回的最大解码字符数。')
+    .default(DEFAULT_MAX_BODY_CHARS)
+    .volatile(),
 });
 
-type ResolvedConfig = Required<Config>;
+/** Resolved (unwrapped) config the fetch provider reads. */
+type ResolvedConfig = { allowlist: string[]; maxBodyChars: number };
+
+/**
+ * Unwrap the live `Volatile<T>` references the Loader passes for `.volatile()`
+ * fields into a plain object, once per read.
+ *
+ * @param config - the live plugin config handed to `apply`.
+ * @returns a detached plain object of current values.
+ */
+function resolveConfig(config: Config): ResolvedConfig {
+  return {
+    allowlist: config.allowlist.get(),
+    maxBodyChars: config.maxBodyChars.get(),
+  };
+}
 
 //#region IP / CIDR helpers (no external dependency)
 /** 4 for IPv4, 6 for IPv6, 0 when not an IP literal. */
@@ -384,44 +406,23 @@ async function directFetch(
 
 /** Cordis plugin metadata. */
 export const name = 'dsh-web-allowlist-fetch';
-/** Cordis service requirements: `web` (fetch seam) is mandatory; `settings` is optional. */
+/** Cordis service requirements: `web` (fetch seam) is mandatory. */
 export const inject = ['web'] as const;
 
 /**
- * Cordis plugin entry: register the allowlist fetch provider and expose the
- * allowlist as a settings namespace.
+ * Cordis plugin entry: register the allowlist fetch provider.
  *
- * The provider reads its config through a dynamic thunk (`current`), so when
- * the `settings` service is present the user can edit the allowlist from the
- * Settings → 插件配置 surface and the change applies on the next fetch without
- * re-registration. When no settings service exists the plugin falls back to its
- * composed entry config (from `cordis.patch.yml`) and keeps the stock behavior.
+ * The provider reads its config through a thunk that unwraps the live
+ * `Volatile<T>` references on every fetch, so a settings edit committed from
+ * Settings → 插件配置 (auto-generated from this Config schema) applies on the
+ * next fetch without re-registration or remounting.
  *
  * Routing `web.config.fetchProvider` to `allowlist` is handled by this
  * bundle's `cordis.patch.yml`.
  *
- * @param ctx - the Cordis context, providing `ctx.web` (and optionally `ctx.settings`).
- * @param config - validated plugin config.
+ * @param ctx - the Cordis context, providing `ctx.web` (the fetch seam).
+ * @param config - validated plugin config carrying live `.volatile()` refs.
  */
 export function apply(ctx: Context, config: Config): void {
-  let current: () => Config = () => config;
-  const resolved = () => (current() as ResolvedConfig) ?? (config as ResolvedConfig);
-
-  ctx.web.registerFetchProvider(createAllowlistFetchProvider(resolved));
-
-  ctx.inject(['settings'], (settingsCtx) => {
-    settingsCtx.settings.installSection(
-      ctx,
-      DSH_WEB_ALLOWLIST_FETCH_SETTINGS_NAMESPACE,
-      Config,
-      config,
-      {
-        // While the settings provider is attached, the settings scope is the
-        // authoritative source (user layer over the composed entry). On detach
-        // the source falls back to the entry config, and onChange is fired.
-        setSource: (source) => { current = source; },
-        onChange: () => {},
-      },
-    );
-  });
+  ctx.web.registerFetchProvider(createAllowlistFetchProvider(() => resolveConfig(config)));
 }

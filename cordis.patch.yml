@@ -8,9 +8,10 @@
 # `http` provider and this one both register as usable and the seam raises
 # WEB_PROVIDER_AMBIGUOUS).
 #
-# The allowlist itself is now exposed as a settings namespace
-# (`dsh-web-allowlist-fetch`) and edited from Settings → 插件配置. The default
-# below is intentionally empty; a user override lands in `$DSH_HOME/settings.yaml`.
+# The allowlist is a `.volatile()` Config field, so it appears automatically on
+# the Settings → 插件配置 surface (no separate settings namespace or client
+# bundle). Edits are committed to this profile's patch layer. The default below
+# is intentionally empty; add entries there or from the settings page.
 #
 # NOTE on patch semantics: a patch row targets by id and REPLACES the whole
 # config of that row (see docs/architecture.md). So the `web` row below must

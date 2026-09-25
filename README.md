@@ -38,36 +38,30 @@ The bundle's `cordis.patch.yml` registers the provider and routes
 
 ## Configuration
 
-The allowlist is exposed as a **settings namespace** (`dsh-web-allowlist-fetch`)
-and edited from the **Settings → 插件配置** surface in the web client: open the
-plugin's card and edit the allowlist (one host/IP entry per line). A committed
-override lands in `$DSH_HOME/settings.yaml` and applies on the next fetch
-without restarting.
+The allowlist is a `.volatile()` plugin Config field, so DeepSeek Harness
+**auto-generates an editor for it on the Settings → 插件配置 surface** — no
+separate settings namespace or client bundle is involved. Edits are committed to
+the profile's patch layer and apply on the next fetch without a restart.
 
-The composed default (what the card starts from) is the bundle's patch — edit
-it in your profile's `cordis.patch.yml` (or the settings layer):
+The composed default lives in this bundle's `cordis.patch.yml`; override it in
+your profile's `cordis.patch.yml`:
 
 ```yaml
 - insert:
     - id: web-fetch-allowlist
       name: dsh-web-allowlist-fetch
       config:
-        allowlist: []
+        allowlist:
+          - weather.com            # this domain + any subdomain
+          - 198.18.0.0/15          # Clash fake-IP range (any host resolving here)
+          - 127.0.0.1              # a single IP literal
 - id: web
   config:
     fetchProvider: allowlist
     searchProvider: ddg
 ```
 
-You can also set the namespace directly in your settings layer:
-
-```yaml
-dsh-web-allowlist-fetch:
-  allowlist:
-    - weather.com            # this domain + any subdomain
-    - 198.18.0.0/15          # Clash fake-IP range (any host resolving here)
-    - 127.0.0.1              # a single IP literal
-```
+`maxBodyChars` (default `200000`) is configurable the same way.
 
 ### Entry forms
 
