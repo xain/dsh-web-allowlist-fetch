@@ -26,10 +26,14 @@
     ".": {
       "default": "./lib/index.mjs"
     },
+    "./client": {
+      "default": "./lib/client.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
     "lib/index.mjs",
+    "lib/client.js",
     "cordis.patch.yml",
     "src",
     "README.md",
@@ -38,6 +42,9 @@
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web"
     }
   },
   "scripts": {
@@ -57,8 +64,17 @@
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "^4.0.2",
+    "@deepseek-ai/dsh-client-locale": "^0.0.1-rc.1",
+    "@deepseek-ai/dsh-client-store": "^0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-plugin-manager": "^0.1.6-alpha.2",
+    "@deepseek-ai/dsh-client-ui-primitives": "^0.0.1-rc.1",
+    "@deepseek-ai/dsh-client-ui-renderer": "^0.1.0-rc.8",
+    "@deepseek-ai/dsh-client-ui-settings": "^0.0.1-rc.1",
+    "@deepseek-ai/dsh-client-ui-slots": "^0.0.1-rc.1",
     "@deepseek-ai/dsh-web": ">=0.1.0-rc.6 <1",
     "@deepseek-ai/schemastery": ">=3.18.4 <4",
+    "@types/react": "^19.3.0",
+    "react": "^19.3.0",
     "tsdown": "^0.22.14"
   }
 }

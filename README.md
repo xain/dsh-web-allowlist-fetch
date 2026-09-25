@@ -17,8 +17,8 @@ This plugin registers a `web_fetch` provider (`id: allowlist`) that:
 - keeps the **stock public-IP safety check** for every other host, so the
   default posture is unchanged.
 
-The allowlist is editable from the web client's **Settings → 插件配置** surface;
-see [Configuration](#configuration).
+The allowlist is editable from the web client's **Plugins** panel; see
+[Configuration](#configuration).
 
 ## Install
 
@@ -38,10 +38,12 @@ The bundle's `cordis.patch.yml` registers the provider and routes
 
 ## Configuration
 
-The allowlist is a `.volatile()` plugin Config field, so DeepSeek Harness
-**auto-generates an editor for it on the Settings → 插件配置 surface** — no
-separate settings namespace or client bundle is involved. Edits are committed to
-the profile's patch layer and apply on the next fetch without a restart.
+The allowlist is a `.volatile()` plugin Config field. DSH projects those fields
+into a settings form keyed by this bundle's profile entry id
+(`web-fetch-allowlist`), and this package's browser half registers the page that
+edits it into the **Plugins** panel (the sidebar's `Plugins` entry → *Web fetch
+allowlist*). A committed edit lands in the profile's patch layer and applies on
+the next fetch without a restart.
 
 The composed default lives in this bundle's `cordis.patch.yml`; override it in
 your profile's `cordis.patch.yml`:

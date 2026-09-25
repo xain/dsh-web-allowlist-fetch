@@ -8,10 +8,12 @@
 # `http` provider and this one both register as usable and the seam raises
 # WEB_PROVIDER_AMBIGUOUS).
 #
-# The allowlist is a `.volatile()` Config field, so it appears automatically on
-# the Settings → 插件配置 surface (no separate settings namespace or client
-# bundle). Edits are committed to this profile's patch layer. The default below
-# is intentionally empty; add entries there or from the settings page.
+# The allowlist is a `.volatile()` Config field. DSH projects it into a settings
+# form keyed by this entry's id (`web-fetch-allowlist`), and this package's
+# browser half registers the editor for it into the Plugins panel (sidebar →
+# `Plugins` → "Web fetch allowlist"). Edits are committed to this profile's patch
+# layer. The default below is intentionally empty; add entries there or from the
+# page.
 #
 # NOTE on patch semantics: a patch row targets by id and REPLACES the whole
 # config of that row (see docs/architecture.md). So the `web` row below must
